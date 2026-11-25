@@ -1,0 +1,52 @@
+services:
+  invoiceplane-db:
+    image: mariadb:10.11
+    container_name: invoiceplane-db
+    restart: unless-stopped
+
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+    volumes:
+      - ./db:/var/lib/mysql
+
+  invoiceplane:
+    image: sameersbn/invoiceplane:latest
+    container_name: invoiceplane
+    command: app:invoiceplane
+    restart: unless-stopped
+    depends_on:
+      - invoiceplane-db
+
+    environment:
+      - TZ=Asia/Kolkata
+      - DB_TYPE=mysqli
+      - DB_HOST=invoiceplane-db
+      - DB_USER=${MYSQL_USER}
+      - DB_PASS=${MYSQL_PASSWORD}
+      - DB_NAME=${MYSQL_DATABASE}
+      - INVOICEPLANE_URL=http://192.168.1.111:8084
+
+    volumes:
+      - ./data:/var/lib/invoiceplane
+
+  invoiceplane-nginx:
+    image: sameersbn/invoiceplane:latest
+    container_name: invoiceplane-nginx
+    command: app:nginx
+    restart: unless-stopped
+    depends_on:
+      - invoiceplane
+
+    environment:
+      - INVOICEPLANE_PHP_FPM_HOST=invoiceplane
+      - INVOICEPLANE_PHP_FPM_PORT=9000
+
+    ports:
+      - "8084:80"
+
+    volumes_from:
+      - invoiceplane

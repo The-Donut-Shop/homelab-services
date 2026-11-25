@@ -1,0 +1,10 @@
+# secrets and state stay on the server
+.env
+*/.env
+*/data/
+*/db/
+*/cache/
+*/media/
+# separate projects / leftovers that are not part of this repo
+hackmash/
+tubearchivist/
